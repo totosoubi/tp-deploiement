@@ -86,6 +86,8 @@ jobs:
     needs: build_push
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      APP_PORT: '8029'
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
@@ -110,7 +112,7 @@ jobs:
           AZURE_HOST: ${{ secrets.AZURE_HOST }}
           EXPECTED_VERSION: ${{ github.sha }}
         run: |
-          export BASE_URL="http://$AZURE_HOST"
+          export BASE_URL="http://$AZURE_HOST:$APP_PORT"
           bash scripts/test-e2e.sh
       - name: Capturer la page réellement déployée sur Azure
         env:
@@ -118,7 +120,7 @@ jobs:
           EXPECTED_VERSION: ${{ github.sha }}
         run: |
           python -m playwright install --with-deps chromium
-          export BASE_URL="http://$AZURE_HOST"
+          export BASE_URL="http://$AZURE_HOST:$APP_PORT"
           python scripts/capture.py
       - name: Conserver la preuve du déploiement
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -127,3 +129,4 @@ jobs:
           path: artifacts/
           if-no-files-found: error
           retention-days: 30
+          overwrite: true

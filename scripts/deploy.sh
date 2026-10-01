@@ -36,17 +36,19 @@ printf '%s' "$DOCKERHUB_TOKEN" | "${docker_cmd[@]}" --config "$registry_config" 
 "${docker_cmd[@]}" --config "$registry_config" pull "$IMAGE_REF"
 unset DOCKERHUB_TOKEN
 
-previous_ref="$("${docker_cmd[@]}" inspect --format '{{.Config.Image}}' tp-deploiement 2>/dev/null || true)"
-compose_cmd=("${docker_cmd[@]}" compose --project-name tp-deploiement --file "$DEPLOY_DIR/compose.yaml")
+container_name=soubirou-pouey_thomas
+project_name=tp-deploiement-thomas-soubirou-pouey
+previous_ref="$("${docker_cmd[@]}" inspect --format '{{.Config.Image}}' "$container_name" 2>/dev/null || true)"
+compose_cmd=("${docker_cmd[@]}" compose --project-name "$project_name" --file "$DEPLOY_DIR/compose.yaml")
 # sudo ne conserve pas nécessairement IMAGE_REF : fournir explicitement les
 # seules variables de configuration, sans transmettre le token au conteneur.
 compose() {
   if [[ "${docker_cmd[0]}" == sudo ]]; then
-    sudo -n env IMAGE_REF="$IMAGE_REF" APP_PORT="${APP_PORT:-80}" \
+    sudo -n env IMAGE_REF="$IMAGE_REF" APP_PORT="${APP_PORT:-8029}" \
       BIND_ADDRESS="${BIND_ADDRESS:-0.0.0.0}" docker compose \
-      --project-name tp-deploiement --file "$DEPLOY_DIR/compose.yaml" "$@"
+      --project-name "$project_name" --file "$DEPLOY_DIR/compose.yaml" "$@"
   else
-    IMAGE_REF="$IMAGE_REF" APP_PORT="${APP_PORT:-80}" \
+    IMAGE_REF="$IMAGE_REF" APP_PORT="${APP_PORT:-8029}" \
       BIND_ADDRESS="${BIND_ADDRESS:-0.0.0.0}" "${compose_cmd[@]}" "$@"
   fi
 }
@@ -63,6 +65,6 @@ if ! compose up -d --no-build --pull never --wait --wait-timeout 90; then
 fi
 
 # Un deuxième déploiement du même digest conserve le conteneur sain existant.
-"${docker_cmd[@]}" exec tp-deploiement python healthcheck.py
+"${docker_cmd[@]}" exec "$container_name" python healthcheck.py
 compose ps
 printf '%s\n' 'Déploiement terminé, conteneur sain.'

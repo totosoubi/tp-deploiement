@@ -20,7 +20,7 @@ args = sys.argv[1:]
 if args[:1] == ['--config']:
     args = args[2:]
 with open(os.environ['CALL_LOG'], 'a') as output:
-    output.write(json.dumps({'args': args, 'image': os.environ.get('IMAGE_REF')}) + '\\n')
+    output.write(json.dumps({'args': args, 'image': os.environ.get('IMAGE_REF'), 'port': os.environ.get('APP_PORT')}) + '\\n')
 mode = os.environ.get('DEPLOY_TEST_MODE')
 if args == ['info'] and os.environ.get('NEEDS_SUDO') == '1' and not os.environ.get('FAKE_SUDO'):
     sys.exit(1)
@@ -74,7 +74,14 @@ def test_success_deploys_only_one_service_and_checks_health(deployment, sudo):
     assert result.returncode == 0, result.stderr
     assert len(updates(calls)) == 1
     assert updates(calls)[0]['image'] == CURRENT
-    assert any(call['args'] == ['exec', 'tp-deploiement', 'python', 'healthcheck.py'] for call in calls)
+    assert updates(calls)[0]['port'] == '8029'
+    assert any(call['args'] == ['exec', 'soubirou-pouey_thomas', 'python', 'healthcheck.py'] for call in calls)
+    for call in calls:
+        args = call['args']
+        if '--project-name' in args:
+            assert args[args.index('--project-name') + 1] == 'tp-deploiement-thomas-soubirou-pouey'
+        if args[0] == 'inspect':
+            assert args[-1] == 'soubirou-pouey_thomas'
 
 
 def test_pull_failure_leaves_current_service_untouched(deployment):

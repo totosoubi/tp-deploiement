@@ -14,33 +14,60 @@ par `DOCKERHUB_USERNAME`. Générer un token d'accès avec les droits de lecture
 et d'écriture et le stocker dans `DOCKERHUB_TOKEN` sur GitHub.
 L'image peut être privée : le script s'authentifie aussi sur la VM pour la lire.
 
-## 2. VM Azure
+## 2. VM Azure fournie pour le TP
 
-Dans le portail Azure, créer une VM Ubuntu Server **24.04 LTS x64** avec une
-IP publique et une authentification par clé SSH. Conserver la clé privée
-hors du dépôt. La clé utilisée par Actions doit être utilisable sans saisie
-de passphrase et sa clé publique doit être autorisée pour l'utilisateur SSH.
+Utiliser l'adresse IP et l'utilisateur SSH transmis par le professeur.
+La VM doit exécuter Ubuntu x64 et permettre une authentification par clé SSH.
+Si aucune VM n'est fournie, créer une VM Ubuntu Server **24.04 LTS x64** avec
+une IP publique. Conserver la clé privée hors du dépôt. La clé utilisée par
+Actions doit être utilisable sans saisie de passphrase et sa clé publique
+doit être autorisée pour l'utilisateur SSH.
 
-Autoriser le TCP `80` pour la page publique et le TCP `22` pour la connexion
+Autoriser le TCP **8029** pour la page publique et le TCP `22` pour la connexion
 SSH des runners GitHub dans le groupe de sécurité réseau Azure. Vérifier
 également le pare-feu Ubuntu s'il est activé. Une règle SSH limitée uniquement
 à l'IP de ton Mac ne permet pas aux runners GitHub hébergés de se connecter.
 
+Sur le serveur partagé, utiliser le conteneur `soubirou-pouey_thomas`, le
+projet Compose `tp-deploiement-thomas-soubirou-pouey` et le dossier
+`~/tp-deploiement-thomas-soubirou-pouey`. Le workflow est configuré avec ces noms.
+
+Si le professeur fournit un mot de passe SSH, préparer une clé dédiée sur
+le Mac, puis l'autoriser une seule fois sur le serveur :
+
+```bash
+test -f ~/.ssh/tp_deploiement_thomas || ssh-keygen -t ed25519 -N '' \
+  -C 'github-actions-tp-deploiement-thomas' -f ~/.ssh/tp_deploiement_thomas
+ssh-copy-id -i ~/.ssh/tp_deploiement_thomas.pub UTILISATEUR_SSH@IP_PUBLIQUE_VM
+```
+
+Le mot de passe se saisit dans le Terminal. Après cette préparation,
+GitHub Actions utilise la clé privée enregistrée dans `AZURE_SSH_PRIVATE_KEY`.
+Vérifier la clé d'hôte du serveur (section 4) avant de l'accepter lors d'une
+première connexion.
+
 Cette préparation ne crée pas de VM automatiquement depuis le workflow.
 [Créer une VM Linux sur Azure](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/quick-create-portal).
 
-## 3. Installer Docker sur la VM une seule fois
+## 3. Vérifier Docker sur la VM
 
 Depuis le dossier du projet, adapter les variables ci-dessous :
 
 ```bash
 export AZURE_HOST='IP_PUBLIQUE_VM'
 export AZURE_USER='UTILISATEUR_SSH'
-export AZURE_KEY='/chemin/hors-du-depot/cle-privee.pem'
+export AZURE_KEY="$HOME/.ssh/tp_deploiement_thomas"
 ```
 
-Lors de la première connexion, comparer l'empreinte SSH du serveur à celle
-obtenue depuis une console Azure de confiance avant de l'accepter.
+Vérifier Docker et Compose :
+
+```bash
+ssh -i "$AZURE_KEY" "$AZURE_USER@$AZURE_HOST" 'docker version && docker compose version'
+```
+
+Sur une VM fournie pour le TP, vérifier avec son administrateur si Docker
+manque. Sur une VM que tu administres, l'installation initiale peut se faire
+avec le script fourni :
 
 ```bash
 scp -i "$AZURE_KEY" scripts/bootstrap-vm.sh "$AZURE_USER@$AZURE_HOST:bootstrap-vm.sh"
@@ -54,8 +81,8 @@ L'utilisateur Azure doit pouvoir utiliser Docker directement ou via
 
 ## 4. Vérifier la clé d'hôte SSH
 
-Dans **Azure → VM → Run command → RunShellScript**, afficher l'empreinte
-publique de la clé d'hôte :
+Demander l'empreinte au professeur, ou dans **Azure → VM → Run command →
+RunShellScript**, afficher l'empreinte publique de la clé d'hôte :
 
 ```bash
 ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub
@@ -100,7 +127,7 @@ git push origin main
 ```
 
 Les quatre jobs doivent réussir dans l'onglet **Actions**. Ouvrir ensuite
-`http://<IP_PUBLIQUE_VM>` et récupérer l'artefact `azure-<SHA>` dans ce run.
+`http://<IP_PUBLIQUE_VM>:8029` et récupérer l'artefact `azure-<SHA>` dans ce run.
 Le workflow effectue lui-même les tests publics et la capture ; aucune
 connexion manuelle à la VM n'est nécessaire après le push.
 

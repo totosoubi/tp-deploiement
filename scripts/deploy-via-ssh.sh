@@ -25,7 +25,8 @@ ssh-keygen -y -P '' -f "$ssh_dir/key" >/dev/null
   printf 'export IMAGE_REF=%q\n' "$IMAGE_REF"
   printf 'export DOCKERHUB_USERNAME=%q\n' "$DOCKERHUB_USERNAME"
   printf 'export DOCKERHUB_TOKEN=%q\n' "$DOCKERHUB_TOKEN"
-  printf '%s\n' 'set -euo pipefail' 'export DEPLOY_DIR="$HOME/tp-deploiement"' \
+  printf 'export APP_PORT=%q\n' "${APP_PORT:-8029}"
+  printf '%s\n' 'set -euo pipefail' 'export DEPLOY_DIR="$HOME/tp-deploiement-thomas-soubirou-pouey"' \
     'mkdir -p "$DEPLOY_DIR"' 'cat > "$DEPLOY_DIR/compose.yaml" << '\''COMPOSE_CONTENT'\'''
   cat deploy/compose.yaml
   printf '\n%s\n' 'COMPOSE_CONTENT'

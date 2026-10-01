@@ -34,7 +34,19 @@ Application : <http://localhost:8091>.
 | `/who` | HTTP `200`, texte `Thomas Soubirou-Pouey`. |
 | `/version` | Version embarquée dans l'image : SHA du commit en CI, `local` ici. |
 
-Le conteneur expose `8080`. Compose publie `8091` sur le Mac et `80` sur la VM.
+Le conteneur expose `8080`. Compose publie `8091` sur le Mac et le port attribué
+**8029** sur la VM.
+
+Pour lancer directement l'image Docker Hub sur le port attribué (y compris
+sur un Mac Apple Silicon) :
+
+```bash
+docker run -d --platform linux/amd64 --name soubirou-pouey_thomas \
+  --restart unless-stopped -p 8029:8080 tomsoubi/tp-deploiement:latest
+```
+
+Vérification locale : <http://localhost:8029/health>. Si ce conteneur existe
+déjà et est arrêté, le relancer avec `docker start soubirou-pouey_thomas`.
 
 ## Tests
 
@@ -67,10 +79,10 @@ BASE_URL=http://127.0.0.1:8091 EXPECTED_VERSION=local bash scripts/test-e2e.sh
 
 ## Activer Docker Hub et Azure
 
-Préparer une VM **Ubuntu 24.04 x64**, Docker et Compose, un accès SSH non
-interactif et les ports `22` et `80`. Créer un dépôt Docker Hub nommé
-`tp-deploiement`. Le [guide de préparation](docs/azure-setup.md) détaille
-ces opérations initiales.
+Utiliser la **VM Ubuntu fournie pour le TP**, avec Docker et Compose, un accès
+SSH par clé sur le port `22` et le port applicatif **8029** accessible depuis
+Internet. L'image est publiée dans `tomsoubi/tp-deploiement`. Le
+[guide de préparation](docs/azure-setup.md) détaille la configuration initiale.
 
 Dans **Settings → Secrets and variables → Actions → Repository secrets** du
 dépôt GitHub, renseigner :
@@ -95,8 +107,11 @@ l'image. Aucun secret réel n'est inclus dans ce dépôt.
 - Image publiée avec `sha-<SHA complet du commit>` et `latest`. Le déploiement
   utilise le **digest SHA-256** renvoyé par la publication, et `/version`
   permet de contrôler que le commit attendu est réellement servi.
-- Un seul conteneur nommé `tp-deploiement`, géré par Compose. Relancer le même
-  digest conserve le conteneur sain existant. Les workflows sont sérialisés.
+- Un seul conteneur nommé `soubirou-pouey_thomas`, géré par le projet Compose
+  `tp-deploiement-thomas-soubirou-pouey` dans le dossier du même nom sur la VM.
+  Le port `8029` et ces noms propres au TP permettent un déploiement sur un
+  serveur partagé. Relancer le même digest conserve le conteneur sain
+  existant. Les workflows sont sérialisés.
 - L'image est téléchargée avant de modifier le service. En cas d'échec du
   healthcheck au démarrage, le script restaure l'image précédente et la CI
   reste en échec. Le remplacement peut provoquer une brève interruption.
@@ -108,7 +123,7 @@ l'image. Aucun secret réel n'est inclus dans ce dépôt.
 ## Rendu
 
 Après un workflow entièrement réussi, l'application est accessible à
-`http://<IP_PUBLIQUE_VM>`. L'artefact GitHub Actions **`azure-<SHA>`** contient
+`http://<IP_PUBLIQUE_VM>:8029`. L'artefact GitHub Actions **`azure-<SHA>`** contient
 `azure-public.png` (capture avec l'adresse réelle et la version visibles)
 et `deployment.txt` (URL et version vérifiées).
 
@@ -116,9 +131,11 @@ Les [sorties de validation locale](docs/validation-locale.log) confirment les
 tests, le fonctionnement dans Docker et la conservation du même conteneur
 après deux lancements de la configuration de déploiement.
 
-**État de préparation :** application et tests validés localement ; la
-publication Docker Hub et le déploiement Azure nécessitent les secrets
-ci-dessus. Une capture locale ne constitue pas la preuve du déploiement Azure.
+**État de préparation :** tests unitaires et E2E réussis dans GitHub Actions,
+image publiée sur Docker Hub, conteneur local vérifié sur le port `8029`.
+Le résultat du déploiement distant et sa capture sont consultables dans
+[GitHub Actions](https://github.com/totosoubi/tp-deploiement/actions).
+Une capture locale ne constitue pas la preuve du déploiement Azure.
 
 Références : [publication Docker avec Actions](https://docs.docker.com/build/ci/github-actions/),
 [GitHub Secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions).

@@ -1,10 +1,10 @@
-name: tp-deploiement
+name: tp-deploiement-thomas-soubirou-pouey
 services:
   app:
     image: ${IMAGE_REF:?IMAGE_REF doit contenir le digest de l'image à déployer}
-    container_name: tp-deploiement
+    container_name: soubirou-pouey_thomas
     ports:
-      - "${BIND_ADDRESS:-0.0.0.0}:${APP_PORT:-80}:8080"
+      - "${BIND_ADDRESS:-0.0.0.0}:${APP_PORT:-8029}:8080"
     restart: unless-stopped
     read_only: true
     tmpfs:
