@@ -2,7 +2,7 @@
 
 **Thomas Soubirou-Pouey** · Flask, Gunicorn, pytest, Docker et GitHub Actions.
 
-Dépôt du rendu : <https://github.com/totosoubi/tp-deploiement> (privé).
+Dépôt du rendu : <https://github.com/totosoubi/tp-deploiement>.
 
 ## Fonctionnement
 
