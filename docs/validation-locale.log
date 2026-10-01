@@ -1,0 +1,130 @@
+TP Déploiement — vérification LOCALE — 2026-10-01T12:03:56.546282+02:00
+Cette sortie ne constitue pas une preuve de déploiement sur Azure.
+
+$ python -m pytest tests/unit -q
+...................                                                      [100%]
+19 passed in 5.79s
+
+$ bash scripts/test-e2e.sh
+Healthcheck HTTP réussi.
+.....                                                                    [100%]
+5 passed in 0.19s
+[2026-10-01 12:04:03 +0200] [15168] [INFO] Starting gunicorn 26.2.0
+[2026-10-01 12:04:03 +0200] [15168] [INFO] Listening at: http://127.0.0.1:8092 (15168)
+[2026-10-01 12:04:03 +0200] [15168] [INFO] Using worker: sync
+[2026-10-01 12:04:03 +0200] [15170] [INFO] Booting worker with pid: 15170
+[2026-10-01 12:04:04 +0200] [15168] [INFO] Handling signal: term
+[2026-10-01 12:04:04 +0200] [15170] [INFO] Worker exiting (pid: 15170)
+[2026-10-01 12:04:04 +0200] [15168] [INFO] Shutting down: Master
+
+$ docker compose up -d --build --wait --wait-timeout 90
+#1 [internal] load local bake definitions
+#1 reading from stdin 689B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 648B done
+#2 DONE 0.0s
+
+#3 [internal] load metadata for docker.io/library/python:3.13-slim
+#3 DONE 0.8s
+
+#4 [internal] load .dockerignore
+#4 transferring context: 122B done
+#4 DONE 0.0s
+
+#5 [internal] load build context
+#5 transferring context: 166B done
+#5 DONE 0.0s
+
+#6 [1/6] FROM docker.io/library/python:3.13-slim@sha256:7c61056e61ac89e852de05f3dc6fa51a6dd2181797bceed46aa725dd7cb2cd3b
+#6 resolve docker.io/library/python:3.13-slim@sha256:7c61056e61ac89e852de05f3dc6fa51a6dd2181797bceed46aa725dd7cb2cd3b 0.0s done
+#6 DONE 0.0s
+
+#7 [2/6] WORKDIR /app
+#7 CACHED
+
+#8 [3/6] COPY requirements.txt .
+#8 CACHED
+
+#9 [4/6] RUN pip install --no-cache-dir -r requirements.txt
+#9 CACHED
+
+#10 [5/6] COPY app.py healthcheck.py ./
+#10 CACHED
+
+#11 [6/6] COPY templates/ templates/
+#11 CACHED
+
+#12 exporting to image
+#12 exporting layers done
+#12 exporting manifest sha256:b3098662547146ae5fb6da5526c2d5526ed078020e3950fc29a8d507f6a89760 done
+#12 exporting config sha256:71b9fc7174f7ba6e28b151b24e4eedaad9064a545a5600082d6bab86d313ae6c 0.0s done
+#12 exporting attestation manifest sha256:62cd43c271b63a332636408b385debc9bbc06529e294def00814ddd76e196a71 0.0s done
+#12 exporting manifest list sha256:935e4d886842e994e5485a8bb6bd19751b4ed439bc2872291b73e3f4dfe250ba done
+#12 naming to docker.io/library/tp-deploiement:local
+#12 naming to docker.io/library/tp-deploiement:local done
+#12 unpacking to docker.io/library/tp-deploiement:local done
+#12 DONE 0.1s
+
+#13 resolving provenance for metadata file
+#13 DONE 0.0s
+ tp-deploiement:local  Built
+ Container tp-deploiement-local-app-1  Recreate
+ Container tp-deploiement-local-app-1  Recreated
+ Container tp-deploiement-local-app-1  Starting
+ Container tp-deploiement-local-app-1  Started
+ Container tp-deploiement-local-app-1  Waiting
+ Container tp-deploiement-local-app-1  Healthy
+
+$ bash scripts/test-e2e.sh
+Healthcheck HTTP réussi.
+.....                                                                    [100%]
+5 passed in 0.23s
+
+Vérification de la configuration VM en local, port temporaire 8093.
+
+$ docker compose -p tp-deploiement-validation -f deploy/compose.yaml up -d --no-build --pull never --wait
+ Network tp-deploiement-validation_default  Creating
+ Network tp-deploiement-validation_default  Created
+ Container tp-deploiement  Creating
+ Container tp-deploiement  Created
+ Container tp-deploiement  Starting
+ Container tp-deploiement  Started
+ Container tp-deploiement  Waiting
+ Container tp-deploiement  Healthy
+
+$ docker compose -p tp-deploiement-validation -f deploy/compose.yaml ps -q app
+35eba0473b2556c9b1919bc8db594814c78c3a22d4cad65b4f516393a1b05fd1
+
+$ bash scripts/test-e2e.sh
+Healthcheck HTTP réussi.
+.....                                                                    [100%]
+5 passed in 0.24s
+
+$ docker compose -p tp-deploiement-validation -f deploy/compose.yaml up -d --no-build --pull never --wait
+ Container tp-deploiement  Running
+ Container tp-deploiement  Waiting
+ Container tp-deploiement  Healthy
+
+$ docker compose -p tp-deploiement-validation -f deploy/compose.yaml ps -q app
+35eba0473b2556c9b1919bc8db594814c78c3a22d4cad65b4f516393a1b05fd1
+Idempotence vérifiée : même identifiant après deux déploiements Compose.
+
+$ docker compose -p tp-deploiement-validation -f deploy/compose.yaml down
+ Container tp-deploiement  Stopping
+ Container tp-deploiement  Stopped
+ Container tp-deploiement  Removing
+ Container tp-deploiement  Removed
+ Network tp-deploiement-validation_default  Removing
+ Network tp-deploiement-validation_default  Removed
+
+$ /private/tmp/tp-deploiement-tools.5mPqT8/actionlint -shellcheck= .github/workflows/cicd.yml
+
+Workflow GitHub Actions : actionlint OK (ShellCheck non installé).
+
+$ docker compose ps
+NAME                         IMAGE                  COMMAND                  SERVICE   CREATED          STATUS                    PORTS
+tp-deploiement-local-app-1   tp-deploiement:local   "gunicorn --bind 0.0…"   app       16 seconds ago   Up 15 seconds (healthy)   127.0.0.1:8091->8080/tcp
+
+RÉSULTAT : 19 tests unitaires ; 5 E2E source ; 5 E2E Docker ; 5 E2E configuration VM ; idempotence Compose ; workflow valide.

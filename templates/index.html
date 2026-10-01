@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TP Déploiement — Thomas Soubirou-Pouey</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; background: #f4f6fa; color: #203249; font: 16px/1.6 system-ui, sans-serif; }
+      main { width: min(780px, calc(100% - 40px)); margin: 10vh auto; }
+      .label { color: #275dc1; font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+      h1 { font-size: clamp(36px, 6vw, 58px); line-height: 1.12; letter-spacing: -2px; margin: 20px 0; }
+      .intro { color: #53657c; font-size: 19px; }
+      .panel { margin-top: 35px; padding: 28px; border: 1px solid #d7dfeb; border-radius: 12px; background: white; }
+      h2 { font-size: 21px; margin: 0 0 8px; }
+      .links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
+      .links a { background: #244fa4; color: white; padding: 10px 16px; border-radius: 6px; text-decoration: none; font-weight: 600; }
+      .links a:hover { background: #153874; }
+      a:focus-visible { outline: 3px solid #d68b14; outline-offset: 4px; }
+      dl { margin: 28px 0 0; }
+      dt { color: #53657c; font-size: 13px; margin-top: 18px; }
+      dd { margin: 4px 0; overflow-wrap: anywhere; }
+      code { font-size: 13px; }
+      footer { margin-top: 32px; color: #53657c; font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="label">TP Déploiement · CI/CD</p>
+      <h1>Une application.<br>Du code au déploiement.</h1>
+      <p class="intro">Bienvenue sur l'application de {{ full_name }}.</p>
+      <section class="panel" aria-labelledby="service">
+        <h2 id="service">Vérifier le service</h2>
+        <p>Consultez la disponibilité de l'API, l'identité de son auteur et la version actuellement servie.</p>
+        <nav class="links" aria-label="Endpoints de l'API">
+          <a href="/health">État de l'API</a>
+          <a href="/who">Identité de l'auteur</a>
+          <a href="/version">Version déployée</a>
+        </nav>
+        <dl>
+          <dt>Adresse du service</dt>
+          <dd id="service-address">Adresse affichée dans la barre du navigateur</dd>
+          <dt>Version</dt>
+          <dd><code>{{ version }}</code></dd>
+        </dl>
+      </section>
+      <footer>{{ full_name }} · Tests → Docker Hub → VM Azure</footer>
+    </main>
+    <script>document.getElementById('service-address').textContent = window.location.origin;</script>
+  </body>
+</html>

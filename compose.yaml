@@ -1,0 +1,11 @@
+name: tp-deploiement-local
+services:
+  app:
+    image: tp-deploiement:local
+    build:
+      context: .
+      args:
+        APP_VERSION: ${APP_VERSION:-local}
+    ports:
+      - "127.0.0.1:8091:8080"
+    restart: unless-stopped

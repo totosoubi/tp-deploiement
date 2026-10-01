@@ -1,0 +1,7 @@
+*
+!app.py
+!healthcheck.py
+!requirements.txt
+!templates/
+!templates/**
+!Dockerfile
